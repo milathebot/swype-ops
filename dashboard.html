@@ -6,19 +6,22 @@
 <title>Swype — Ops Dashboard</title>
 <style>
   :root {
-    --bg: #0d0d12;
+    --bg: #0a0a0f;
+    --surface: #111118;
     --card: #16161e;
-    --card-hover: #1e1e28;
-    --border: #2a2a3a;
-    --text: #e8e8f0;
-    --muted: #6b6b80;
-    --accent: #7dd3fc;    /* cyan */
-    --green: #4ade80;
+    --card-hover: #1c1c26;
+    --border: #222230;
+    --text: #eeeef5;
+    --muted: #666680;
+    --accent: #818cf8;    /* indigo */
+    --accent-dim: #1e2040;
+    --green: #34d399;
+    --green-dim: #0d2e22;
     --yellow: #fbbf24;
+    --yellow-dim: #2e2408;
     --red: #f87171;
-    --purple: #a78bfa;
-    --pink: #f472b6;
-    --rouge: #e55b5c;
+    --red-dim: #2e1212;
+    --rouge: #e0555b;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,664 +31,858 @@
     color: var(--text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     min-height: 100vh;
-    padding: 2rem;
   }
 
   a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
 
-  /* ── Header ── */
-  .header {
+  /* ── Top nav ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
   }
-  .header-left { display: flex; align-items: center; gap: 1rem; }
+  .topbar-left { display: flex; align-items: center; gap: 1.5rem; }
   .logo {
-    width: 40px; height: 40px;
+    width: 36px; height: 36px;
     background: var(--rouge);
-    border-radius: 10px;
+    border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1.2rem; color: white;
+    font-weight: 900; font-size: 1.1rem; color: white;
+    flex-shrink: 0;
   }
-  .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-  .header .tagline { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+  .brand h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+  .brand .sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+  .tab-row {
+    display: flex;
+    gap: 2px;
+  }
+  .tab {
+    padding: 0.9rem 1.2rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
   .phase-badge {
     background: var(--rouge);
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 20px;
   }
-
-  /* ── Summary bar ── */
-  .summary-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2.5rem;
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--muted);
   }
-  .stat-card {
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: var(--green); box-shadow: 0 0 6px #34d39980; }
+  .dot-yellow { background: var(--yellow); }
+  .dot-cyan { background: var(--accent); }
+
+  /* ── Page layout ── */
+  .page { display: none; padding: 2rem 2.5rem; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── Summary row ── */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.25rem 1.5rem;
+    padding: 1.1rem 1.25rem;
+    transition: border-color 0.2s;
   }
-  .stat-card .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
-  .stat-card .value { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
-  .stat-card .sub { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
-  .stat-card.green .value { color: var(--green); }
-  .stat-card.yellow .value { color: var(--yellow); }
-  .stat-card.cyan .value { color: var(--accent); }
-  .stat-card.rouge .value { color: var(--rouge); }
+  .stat:hover { border-color: #333348; }
+  .stat .lbl { color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .stat .val { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .stat .sub { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  .stat.green .val { color: var(--green); }
+  .stat.yellow .val { color: var(--yellow); }
+  .stat.accent .val { color: var(--accent); }
+  .stat.rouge .val { color: var(--rouge); }
 
-  /* ── Columns ── */
-  .board {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1.5rem;
-    align-items: start;
-  }
-  .col { }
-  .col-header {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .col-header h2 { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
-  .col-header .count {
-    background: var(--border);
-    color: var(--muted);
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .dot-green { background: var(--green); }
-  .dot-yellow { background: var(--yellow); }
-  .dot-red { background: var(--red); }
-  .dot-cyan { background: var(--accent); }
-  .dot-purple { background: var(--purple); }
-  .dot-pink { background: var(--pink); }
+  /* ── Two-col grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
 
   /* ── Cards ── */
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
-    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     transition: border-color 0.15s;
   }
-  .card:hover { border-color: #3a3a50; }
+  .card:hover { border-color: #333348; }
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.6rem;
+    margin-bottom: 1rem;
   }
-  .card-title { font-size: 0.9rem; font-weight: 600; }
+  .card-title { font-size: 0.88rem; font-weight: 600; }
   .card-tag {
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 2px 8px;
-    border-radius: 6px;
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; padding: 2px 8px; border-radius: 6px;
   }
-  .tag-green { background: #16423c; color: var(--green); }
-  .tag-yellow { background: #3d2e0a; color: var(--yellow); }
-  .tag-red { background: #3d1515; color: var(--red); }
-  .tag-cyan { background: #0e3a4a; color: var(--accent); }
-  .tag-purple { background: #2a1e4a; color: var(--purple); }
-  .tag-pink { background: #3d152e; color: var(--pink); }
-  .tag-muted { background: #1e1e2a; color: var(--muted); }
+  .tag-green { background: var(--green-dim); color: var(--green); }
+  .tag-yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .tag-red { background: var(--red-dim); color: var(--red); }
+  .tag-accent { background: var(--accent-dim); color: var(--accent); }
+  .tag-muted { background: #1a1a24; color: var(--muted); }
+  .tag-rouge { background: #2e1212; color: var(--rouge); }
 
-  .card-meta { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  .card-meta { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
   .card-meta strong { color: var(--text); font-weight: 500; }
+  .card-meta p { margin-bottom: 0.5rem; }
+  .card-meta p:last-child { margin-bottom: 0; }
 
   /* ── Section label ── */
   .section-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 1.5rem 0 0.75rem 0;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.75rem 0;
   }
+  .section-label:first-child { margin-top: 0; }
 
   /* ── Checklist ── */
   .checklist { }
   .check-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid #ffffff08;
-    font-size: 0.85rem;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.65rem 0; border-bottom: 1px solid #ffffff06;
+    cursor: pointer;
   }
   .check-item:last-child { border-bottom: none; }
   .check-box {
-    width: 16px; height: 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 4px;
-    flex-shrink: 0;
-    margin-top: 2px;
+    width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+    border: 1.5px solid var(--border); border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
   }
   .check-box.done { background: var(--green); border-color: var(--green); }
-  .check-box.todo { }
+  .check-box svg { display: none; }
+  .check-box.done svg { display: block; }
+  .check-content { flex: 1; }
+  .check-text { font-size: 0.85rem; line-height: 1.4; }
+  .check-sub { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
   .check-item.done .check-text { text-decoration: line-through; color: var(--muted); }
-  .check-item .check-text { line-height: 1.4; }
-  .check-item .check-sub { font-size: 0.75rem; color: var(--muted); }
 
-  /* ── Progress bar ── */
-  .progress-wrap { margin-top: 0.5rem; }
-  .progress-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--green);
-    transition: width 0.6s ease;
-  }
-  .progress-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  /* ── Progress ── */
+  .progress-wrap { margin: 0.75rem 0 0.5rem; }
+  .progress-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.5s ease; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
 
-  /* ── Two-col layout ── */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-top: 2.5rem;
-  }
-
-  /* ── Priority row ── */
-  .priority-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem 0;
-    border-bottom: 1px solid #ffffff08;
-    font-size: 0.85rem;
-  }
-  .priority-item:last-child { border-bottom: none; }
-  .prio-num {
-    width: 22px; height: 22px;
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem; font-weight: 800;
-    flex-shrink: 0;
-  }
-  .prio-1 { background: #3d1515; color: var(--red); }
-  .prio-2 { background: #3d2e0a; color: var(--yellow); }
-  .prio-3 { background: #0e3a4a; color: var(--accent); }
-
-  /* ── Footer ── */
-  .footer {
-    margin-top: 3rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 0.78rem;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  /* ── Milestone ── */
-  .milestone {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-  }
-  .milestone-dot {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    margin-top: 4px;
-    flex-shrink: 0;
-  }
-  .milestone-line {
-    width: 2px;
-    height: 20px;
-    background: var(--border);
-    margin-left: 5px;
-    margin-top: -4px;
-  }
-  .milestone-content { flex: 1; }
-  .milestone-content .title { font-size: 0.88rem; font-weight: 600; }
-  .milestone-content .desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  /* ── Milestone timeline ── */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .milestone { display: flex; gap: 1rem; align-items: flex-start; }
+  .milestone-left { display: flex; flex-direction: column; align-items: center; }
+  .milestone-dot { width: 14px; height: 14px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .milestone-line { width: 2px; background: var(--border); flex: 1; min-height: 24px; margin: 4px 0; }
   .milestone.done .milestone-dot { background: var(--green); }
   .milestone.active .milestone-dot { background: var(--yellow); box-shadow: 0 0 8px #fbbf2460; }
   .milestone.pending .milestone-dot { background: var(--border); }
+  .milestone.done .milestone-line { background: var(--green); opacity: 0.3; }
+  .milestone-content { padding-bottom: 1.5rem; flex: 1; }
+  .milestone-content .title { font-size: 0.88rem; font-weight: 600; }
+  .milestone-content .desc { font-size: 0.78rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+  /* ── Priority items ── */
+  .priority-item {
+    display: flex; gap: 0.75rem; align-items: flex-start;
+    padding: 0.6rem 0; border-bottom: 1px solid #ffffff06;
+  }
+  .priority-item:last-child { border-bottom: none; }
+  .prio-badge {
+    padding: 2px 8px; border-radius: 6px; font-size: 0.65rem;
+    font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .prio-1 { background: var(--red-dim); color: var(--red); }
+  .prio-2 { background: var(--yellow-dim); color: var(--yellow); }
+  .prio-3 { background: var(--accent-dim); color: var(--accent); }
+  .prio-text { font-size: 0.85rem; line-height: 1.4; }
+
+  /* ── File tree ── */
+  .file-tree { font-size: 0.8rem; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--muted); line-height: 1.8; }
+  .file-tree .dir { color: var(--accent); }
+  .file-tree .done { color: var(--green); }
+  .file-tree .pending { color: var(--yellow); }
+
+  /* ── Divider ── */
+  .divider { border-bottom: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* ── Note box (interactive) ── */
+  .note-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  .note-box textarea {
+    width: 100%; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: inherit; font-size: 0.85rem;
+    resize: none; min-height: 80px; line-height: 1.5;
+  }
+  .note-box textarea::placeholder { color: var(--muted); }
+  .note-footer {
+    display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;
+  }
+  .note-btn {
+    background: var(--accent-dim); color: var(--accent);
+    border: none; padding: 5px 12px; border-radius: 6px;
+    font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .note-btn:hover { background: #28294a; }
+
+  /* ── Debug tree ── */
+  .debug-item { margin-bottom: 1rem; }
+  .debug-item:last-child { margin-bottom: 0; }
+  .debug-label { font-size: 0.78rem; font-weight: 600; margin-bottom: 4px; }
+  .debug-text { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── Collapsible ── */
+  .collapsible { }
+  .col-header {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 0; cursor: pointer; user-select: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .col-header h3 { font-size: 0.82rem; font-weight: 600; flex: 1; }
+  .col-header .chevron { transition: transform 0.2s; font-size: 0.7rem; color: var(--muted); }
+  .col-header.open .chevron { transform: rotate(180deg); }
+  .col-body { padding: 0.75rem 0; display: none; }
+  .col-body.open { display: block; }
 
   /* ── Responsive ── */
   @media (max-width: 1100px) {
-    .board { grid-template-columns: 1fr 1fr; }
-    .summary-bar { grid-template-columns: repeat(2, 1fr); }
+    .summary-row { grid-template-columns: repeat(3, 1fr); }
     .two-col { grid-template-columns: 1fr; }
+    .three-col { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 700px) {
-    body { padding: 1rem; }
-    .board { grid-template-columns: 1fr; }
-    .summary-bar { grid-template-columns: 1fr 1fr; }
+    .topbar { padding: 0 1rem; }
+    .page { padding: 1.25rem; }
+    .summary-row { grid-template-columns: repeat(2, 1fr); }
+    .three-col { grid-template-columns: 1fr; }
+    .tab-row { overflow-x: auto; }
+    .tab { padding: 0.9rem 0.8rem; font-size: 0.75rem; }
   }
 </style>
 </head>
 <body>
 
-<!-- ── Header ── -->
-<div class="header">
-  <div class="header-left">
+<!-- ── Top nav ── -->
+<div class="topbar">
+  <div class="topbar-left">
     <div class="logo">S</div>
-    <div>
+    <div class="brand">
       <h1>Swype</h1>
-      <div class="tagline">ops dashboard — co-founder: Neko &nbsp;|&nbsp; tech co-founder: 0xnoot</div>
+      <div class="sub">ops dashboard — co-founder: Neko &nbsp;|&nbsp; tech: 0xnoot</div>
     </div>
   </div>
-  <div style="display:flex;gap:0.75rem;align-items:center;">
-    <div style="display:flex;align-items:center;gap:6px;">
+  <div class="tab-row" id="tabRow">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="launch">Launch Checklist</div>
+    <div class="tab" data-tab="tech">Tech & Build</div>
+    <div class="tab" data-tab="research">Research</div>
+    <div class="tab" data-tab="notes">Notes</div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill">
       <div class="dot dot-green"></div>
-      <span style="font-size:0.8rem;color:var(--muted);">Jupiter integration in progress</span>
+      <span>Jupiter in progress</span>
     </div>
     <div class="phase-badge">Beta</div>
   </div>
 </div>
 
-<!-- ── Summary bar ── -->
-<div class="summary-bar">
-  <div class="stat-card cyan">
-    <div class="label">Documents</div>
-    <div class="value">9</div>
-    <div class="sub">research, outreach, copy</div>
-  </div>
-  <div class="stat-card green">
-    <div class="label">Checklist</div>
-    <div class="value">3/14</div>
-    <div class="sub">items complete</div>
-  </div>
-  <div class="stat-card yellow">
-    <div class="label">Tech</div>
-    <div class="value">Devnet ✅</div>
-    <div class="sub">Jupiter in progress</div>
-  </div>
-  <div class="stat-card rouge">
-    <div class="label">Target</div>
-    <div class="value">Seeker</div>
-    <div class="sub">dApp Store launch</div>
-  </div>
-</div>
+<!-- ═══════════════════════════════════════
+     TAB: Overview
+═══════════════════════════════════════ -->
+<div class="page active" id="page-overview">
 
-<!-- ── Board ── -->
-<div class="board">
-
-  <!-- ── Phase 1: Launch Checklist ── -->
-  <div class="col">
-    <div class="col-header">
-      <div class="dot dot-red"></div>
-      <h2>Launch Checklist</h2>
-      <div class="count">3/14 done</div>
+  <div class="summary-row" id="summaryRow">
+    <div class="stat accent">
+      <div class="lbl">Documents</div>
+      <div class="val">9</div>
+      <div class="sub">research, outreach, copy</div>
     </div>
-
-    <div class="section-label">dApp Store</div>
-    <div class="checklist">
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">Package ID confirmed: com.swype.app</div>
-        </div>
-      </div>
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">Short description</div>
-          <div class="check-sub">"Swipe right to trade crypto. Done before your stop."</div>
-        </div>
-      </div>
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">Full store copy written</div>
-          <div class="check-sub">~/swype-ops/copy/store-description.md</div>
-        </div>
-      </div>
-      <div class="check-item">
-        <div class="check-box todo"></div>
-        <div>
-          <div class="check-text">Screenshots (on-device, 5–8 shots)</div>
-          <div class="check-sub">user — needed for listing</div>
-        </div>
-      </div>
-      <div class="check-item">
-        <div class="check-box todo"></div>
-        <div>
-          <div class="check-text">Demo video (15–30s, device footage)</div>
-          <div class="check-sub">user — record + attach to launch tweet</div>
-        </div>
-      </div>
-      <div class="check-item">
-        <div class="check-box todo"></div>
-        <div>
-          <div class="check-text">App icon (512×512 or Seeker's spec)</div>
-          <div class="check-sub">user</div>
-        </div>
-      </div>
-      <div class="check-item">
-        <div class="check-box todo"></div>
-        <div>
-          <div class="check-text">Store banner / hero image</div>
-          <div class="check-sub">user</div>
-        </div>
-      </div>
-      <div class="check-item">
-        <div class="check-box todo"></div>
-        <div>
-          <div class="check-text">Submit to Seeker dApp Store</div>
-          <div class="check-sub">after Jupiter + all assets ready</div>
-        </div>
-      </div>
+    <div class="stat green">
+      <div class="lbl">Checklist</div>
+      <div class="val" id="checkProgress">3/14</div>
+      <div class="sub">items complete</div>
     </div>
-
-    <div class="section-label">Outreach Content</div>
-    <div class="checklist">
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">Launch tweet drafts</div>
-          <div class="check-sub">thread + single-tweet versions ready</div>
-        </div>
-      </div>
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">FAQ</div>
-          <div class="check-sub">for community + press</div>
-        </div>
-      </div>
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">One-pager</div>
-          <div class="check-sub">partner + press</div>
-        </div>
-      </div>
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">Pitch deck outline</div>
-          <div class="check-sub">investor conversations</div>
-        </div>
-      </div>
-      <div class="check-item done">
-        <div class="check-box done"></div>
-        <div>
-          <div class="check-text">Media list</div>
-          <div class="check-sub">press + influencers + outreach template</div>
-        </div>
-      </div>
-      <div class="check-item">
-        <div class="check-box todo"></div>
-        <div>
-          <div class="check-text">Launch day — post demo video first, then store link</div>
-          <div class="check-sub">timing: Tue/Wed mid-morning crypto-Twitter peak</div>
-        </div>
-      </div>
+    <div class="stat yellow">
+      <div class="lbl">Tech</div>
+      <div class="val">Devnet</div>
+      <div class="sub">Jupiter in progress</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Outreach</div>
+      <div class="val" style="color:var(--green)">Done</div>
+      <div class="sub">tweets, FAQ, one-pager, deck</div>
+    </div>
+    <div class="stat rouge">
+      <div class="lbl">Target</div>
+      <div class="val">Seeker</div>
+      <div class="sub">dApp Store launch</div>
     </div>
   </div>
 
-  <!-- ── Phase 2: Tech & Build ── -->
-  <div class="col">
-    <div class="col-header">
-      <div class="dot dot-yellow"></div>
-      <h2>Tech &amp; Build</h2>
-      <div class="count">in progress</div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Jupiter Perps Integration</div>
-        <div class="card-tag tag-yellow">active</div>
-      </div>
-      <div class="card-meta">
-        <strong>Owner:</strong> 0xnoot<br>
-        <strong>Status:</strong> In progress — ~2–3 weeks<br>
-        <strong>What:</strong> Real PnL settlement via Jupiter CPI, custody, USDC ATA, liquidations, auto-close via Jupiter<br>
-        <strong>Blockers:</strong> Legal review (geo-blocking, CFTC/tOS)
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:0.75rem;">
-      <div class="card-header">
-        <div class="card-title">Open TODOs (from agent brief)</div>
-        <div class="card-tag tag-purple">tech</div>
-      </div>
-      <div class="card-meta">
-        <strong>P0 — session refresh UX</strong><br>
-        When session expires (4h) app fails silently. Add "refresh session" button.
-        <br><br>
-        <strong>P0 — auto-close on background</strong><br>
-        If user closes app mid-trade, close tx never fires. Need foreground service or lazy-close on reopen.
-        <br><br>
-        <strong>P1 — expo-secure-store</strong><br>
-        Replace AsyncStorage for session keypair (Keystore-backed)
-        <br><br>
-        <strong>P2 — real backend</strong><br>
-        Firebase stub → Helius webhooks + DB for profiles/leaderboards
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:0.75rem;">
-      <div class="card-header">
-        <div class="card-title">Session Keypair Storage</div>
-        <div class="card-tag tag-red">security</div>
-      </div>
-      <div class="card-meta">
-        Currently in plaintext AsyncStorage. <strong>Must fix before mainnet.</strong><br>
-        Use expo-secure-store (Keystore on Android) for the session secret.
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:0.75rem;">
-      <div class="card-header">
-        <div class="card-title">Mainnet Prerequisites</div>
-        <div class="card-tag tag-red">blocked</div>
-      </div>
-      <div class="card-meta">
-        <strong>Not ready to flip to mainnet-beta.</strong><br>
-        Required: Jupiter Perps + legal review + geo-blocking + paid Helius RPC + paid Pyth Hermes + MagicBlock mainnet endpoints + audit ($30–80k)
-      </div>
-    </div>
-
-    <div class="section-label">Deployer Health</div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-size:0.85rem;font-weight:600;">Deployer Wallet</div>
-          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">FXZGi8oK21qCB…</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:0.85rem;font-weight:600;color:var(--green);">~5 SOL</div>
-          <div style="font-size:0.72rem;color:var(--muted);">keep 2–3 SOL for redeploys</div>
-        </div>
-      </div>
+  <div class="progress-wrap" style="margin-bottom:2rem;">
+    <div class="progress-bar"><div class="progress-fill" id="mainProgress" style="width:21%"></div></div>
+    <div class="progress-label">
+      <span>Launch readiness</span>
+      <span id="mainProgressText">3 / 14 tasks</span>
     </div>
   </div>
 
-  <!-- ── Phase 3: Research & Strategy ── -->
-  <div class="col">
-    <div class="col-header">
-      <div class="dot dot-cyan"></div>
-      <h2>Research &amp; Strategy</h2>
-      <div class="count">ready</div>
-    </div>
-
-    <div class="section-label">Competitive Position</div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Blue ocean — no direct competitor</div>
-        <div class="card-tag tag-green">confirmed</div>
-      </div>
-      <div class="card-meta">
-        No swipe-to-trade leveraged perp app exists on Solana Mobile.<br><br>
-        <strong>Key differentiators:</strong><br>
-        · Swipe UX (novel, shareable, screenshotable)<br>
-        · Time-gated auto-close (unique narrative)<br>
-        · Session key zero-popup (technical moat)<br><br>
-        <strong>Key vulnerability:</strong> paper trading = demo, not product. Jupiter integration is the real unlock.
-      </div>
-    </div>
-
-    <div class="section-label">Target User</div>
-    <div class="card" style="margin-top:0.75rem;">
-      <div class="card-meta">
-        18–35, crypto-curious, not deep into DeFi.<br>
-        Uses phone in quick bursts: subway, bathroom, coffee line.<br>
-        Wants the <em>feeling</em> of trading without the overhead.<br><br>
-        <strong>Launch angle:</strong> lead with the moment, not the finance.<br>
-        "Done before your stop" — not "leverage perpetual swap".
-      </div>
-    </div>
-
-    <div class="section-label">Seeker Launch Leverage</div>
-    <div class="card" style="margin-top:0.75rem;">
-      <div class="card-meta">
-        <strong>1.</strong> Post in Solana Mobile Discord (#seeker) — dev community, right audience<br>
-        <strong>2.</strong> Tag @SolanaMobile — if they engage, reach multiplies<br>
-        <strong>3.</strong> "First trading game on Seeker" — category founder angle<br>
-        <strong>4.</strong> Solana has a blog/press channel — could feature new apps<br><br>
-        <strong>Seeker dev portal:</strong> solana.com/developers/mobile
+  <div class="two-col">
+    <div>
+      <div class="section-label">Milestones</div>
+      <div class="timeline">
+        <div class="milestone done">
+          <div class="milestone-left"><div class="milestone-dot"></div><div class="milestone-line"></div></div>
+          <div class="milestone-content">
+            <div class="title">Devnet + session keys on Seeker</div>
+            <div class="desc">Architecture complete, paper trading live</div>
+          </div>
+        </div>
+        <div class="milestone active">
+          <div class="milestone-left"><div class="milestone-dot"></div><div class="milestone-line"></div></div>
+          <div class="milestone-content">
+            <div class="title">Jupiter Perps integration</div>
+            <div class="desc">~2–3 weeks. Real economic execution. Legal review required.</div>
+          </div>
+        </div>
+        <div class="milestone pending">
+          <div class="milestone-left"><div class="milestone-dot"></div><div class="milestone-line"></div></div>
+          <div class="milestone-content">
+            <div class="title">Mainnet + Seeker dApp Store launch</div>
+            <div class="desc">Assets ready → screenshots, demo video, copy.</div>
+          </div>
+        </div>
+        <div class="milestone pending">
+          <div class="milestone-left"><div class="milestone-dot"></div><div class="milestone-line"></div></div>
+          <div class="milestone-content">
+            <div class="title">Soft launch</div>
+            <div class="desc">Twitter + close community → 48h feedback → patch → go broader</div>
+          </div>
+        </div>
+        <div class="milestone pending">
+          <div class="milestone-left"><div class="milestone-dot"></div><div class="milestone-line"></div></div>
+          <div class="milestone-content">
+            <div class="title">Social layer + leaderboards</div>
+            <div class="desc">AsyncStorage → Helius webhooks, real leaderboard data</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="section-label">Files &amp; Docs</div>
-    <div class="card" style="margin-top:0.5rem;">
-      <div class="card-meta">
-        <strong>~/swype-ops/</strong><br>
-        ├── copy/store-description.md ✅<br>
-        ├── launch-checklist.md ✅<br>
-        ├── research/<br>
-        │   ├── competitor-landscape.md ✅<br>
-        │   └── seeker-ecosystem.md ✅<br>
-        ├── outreach/<br>
-        │   ├── tweet-drafts.md ✅<br>
-        │   ├── faq.md ✅<br>
-        │   ├── one-pager.md ✅<br>
-        │   ├── pitch-deck-outline.md ✅<br>
-        │   └── media-list.md ✅<br>
-        └── dashboard.html ← you are here
+    <div>
+      <div class="section-label">Priority Fixes</div>
+      <div class="card">
+        <div class="priority-item">
+          <div class="prio-badge prio-1">P0</div>
+          <div class="prio-text">Session refresh UX — 4h expiry fails silently. Add refresh button.</div>
+        </div>
+        <div class="priority-item">
+          <div class="prio-badge prio-1">P0</div>
+          <div class="prio-text">Auto-close on app background — close tx never fires if minimized mid-trade.</div>
+        </div>
+        <div class="priority-item">
+          <div class="prio-badge prio-2">P1</div>
+          <div class="prio-text">expo-secure-store — session keypair in plaintext AsyncStorage.</div>
+        </div>
+        <div class="priority-item">
+          <div class="prio-badge prio-2">P1</div>
+          <div class="prio-text">Per-trade SOL caps in program — no size limit currently.</div>
+        </div>
+        <div class="priority-item">
+          <div class="prio-badge prio-2">P1</div>
+          <div class="prio-text">Slippage guards on every tx — prevent MEV exploitation.</div>
+        </div>
+        <div class="priority-item">
+          <div class="prio-badge prio-3">P2</div>
+          <div class="prio-text">Real backend — Firebase stub → Helius webhooks + DB.</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:1.5rem;">Files</div>
+      <div class="card">
+        <div class="file-tree">
+          ~/swype-ops/<br>
+          &nbsp;&nbsp;<span class="dir">copy/</span> store-description.md <span class="done">✅</span><br>
+          &nbsp;&nbsp;<span class="dir">research/</span> competitor-landscape.md <span class="done">✅</span><br>
+          &nbsp;&nbsp;<span class="dir">outreach/</span> tweet-drafts.md <span class="done">✅</span><br>
+          &nbsp;&nbsp;<span class="dir">strategy/</span> <span class="pending">...</span><br>
+          &nbsp;&nbsp;launch-checklist.md <span class="done">✅</span><br>
+          &nbsp;&nbsp;dashboard.html ← here
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── Two-col ── -->
-<div class="two-col">
+<!-- ═══════════════════════════════════════
+     TAB: Launch Checklist
+═══════════════════════════════════════ -->
+<div class="page" id="page-launch">
 
-  <!-- ── Launch Timeline ── -->
-  <div>
-    <div class="section-label">Launch Phases</div>
-    <div style="display:flex;flex-direction:column;gap:0;">
-      <div class="milestone done">
-        <div class="milestone-dot"></div>
-        <div class="milestone-content">
-          <div class="title">Devnet + session keys verified on Seeker</div>
-          <div class="desc">Architecture complete, paper trading live</div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="launchProgress" style="width:21%"></div></div>
+    <div class="progress-label">
+      <span>dApp Store launch</span>
+      <span id="launchProgressText">3 / 14 tasks</span>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:1.5rem;">dApp Store Assets</div>
+  <div class="checklist" id="checklist-dapp">
+    <div class="check-item" data-id="d1">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Package ID confirmed: com.swype.app</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d2">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Short description</div>
+        <div class="check-sub">"Swipe right to trade crypto. Done before your stop."</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d3">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Full store copy written</div>
+        <div class="check-sub">~/swype-ops/copy/store-description.md</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d4">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Screenshots (on-device, 5–8 shots)</div>
+        <div class="check-sub">user — needed for listing</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d5">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Demo video (15–30s, device footage)</div>
+        <div class="check-sub">user — record + attach to launch tweet</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d6">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">App icon (512×512 or Seeker's spec)</div>
+        <div class="check-sub">user</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d7">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Store banner / hero image</div>
+        <div class="check-sub">user</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="d8">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Submit to Seeker dApp Store</div>
+        <div class="check-sub">after Jupiter + all assets ready</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Outreach Content</div>
+  <div class="checklist" id="checklist-outreach">
+    <div class="check-item" data-id="o1">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Launch tweet drafts</div>
+        <div class="check-sub">thread + single-tweet versions ready</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="o2">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">FAQ</div>
+        <div class="check-sub">for community + press</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="o3">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">One-pager</div>
+        <div class="check-sub">partner + press</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="o4">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Pitch deck outline</div>
+        <div class="check-sub">investor conversations</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="o5">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Media list</div>
+        <div class="check-sub">press + influencers + outreach template</div>
+      </div>
+    </div>
+    <div class="check-item" data-id="o6">
+      <div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10"><polyline points="2,5 4,7.5 8,2.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="check-content">
+        <div class="check-text">Launch day — post demo video first, then store link</div>
+        <div class="check-sub">timing: Tue/Wed mid-morning crypto-Twitter peak</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB: Tech & Build
+═══════════════════════════════════════ -->
+<div class="page" id="page-tech">
+
+  <div class="three-col">
+    <div>
+      <div class="section-label">Active Work</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Jupiter Perps Integration</div>
+          <div class="card-tag tag-yellow">active</div>
+        </div>
+        <div class="card-meta">
+          <p><strong>Owner:</strong> 0xnoot</p>
+          <p><strong>Timeline:</strong> ~2–3 weeks</p>
+          <p><strong>Scope:</strong> Real PnL settlement via Jupiter CPI, custody, USDC ATA, liquidations, auto-close</p>
+          <p><strong>Blockers:</strong> Legal review (geo-blocking, CFTC/tOS)</p>
         </div>
       </div>
-      <div class="milestone-line" style="margin-left:5px;height:16px;width:2px;background:var(--border);"></div>
-      <div class="milestone active">
-        <div class="milestone-dot"></div>
-        <div class="milestone-content">
-          <div class="title">Jupiter Perps integration</div>
-          <div class="desc">~2–3 weeks. Real economic execution. Legal review required.</div>
+    </div>
+
+    <div>
+      <div class="section-label">Security</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Session Keypair Storage</div>
+          <div class="card-tag tag-red">critical</div>
+        </div>
+        <div class="card-meta">
+          <p>Currently in <strong>plaintext AsyncStorage</strong>. Must fix before mainnet.</p>
+          <p>Use <strong>expo-secure-store</strong> (Keystore-backed on Android) for session secret.</p>
         </div>
       </div>
-      <div class="milestone-line" style="margin-left:5px;height:16px;width:2px;background:var(--border);"></div>
-      <div class="milestone pending">
-        <div class="milestone-dot"></div>
-        <div class="milestone-content">
-          <div class="title">Mainnet + Seeker dApp Store launch</div>
-          <div class="desc">Assets ready → screenshots, demo video, copy. Post demo video first, then store link.</div>
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="card-header">
+          <div class="card-title">Mainnet Blockers</div>
+          <div class="card-tag tag-red">blocked</div>
+        </div>
+        <div class="card-meta">
+          <p>Not ready to flip to mainnet-beta. Required:</p>
+          <p>· Jupiter Perps integration</p>
+          <p>· Legal review + geo-blocking</p>
+          <p>· Paid Helius RPC + paid Pyth Hermes</p>
+          <p>· MagicBlock mainnet endpoints</p>
+          <p>· Audit ($30–80k)</p>
         </div>
       </div>
-      <div class="milestone-line" style="margin-left:5px;height:16px;width:2px;background:var(--border);"></div>
-      <div class="milestone pending">
-        <div class="milestone-dot"></div>
-        <div class="milestone-content">
-          <div class="title">Soft launch (warm audience first)</div>
-          <div class="desc">Twitter + close community → gather 48h feedback → patch → go broader</div>
+    </div>
+
+    <div>
+      <div class="section-label">Health</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Deployer Wallet</div>
+          <div class="card-tag tag-green">ok</div>
+        </div>
+        <div class="card-meta">
+          <p><strong>Address:</strong> FXZGi8oK21qCB…</p>
+          <p><strong>Balance:</strong> ~5 SOL</p>
+          <p>Keep 2–3 SOL for redeploys</p>
         </div>
       </div>
-      <div class="milestone-line" style="margin-left:5px;height:16px;width:2px;background:var(--border);"></div>
-      <div class="milestone pending">
-        <div class="milestone-dot"></div>
-        <div class="milestone-content">
-          <div class="title">Social layer + leaderboards</div>
-          <div class="desc">Backend swap (AsyncStorage → Helius), real leaderboard data</div>
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="card-header">
+          <div class="card-title">Open TODOs</div>
+          <div class="card-tag tag-accent">tech</div>
+        </div>
+        <div class="card-meta">
+          <p><strong>P0</strong> — session refresh UX (4h expiry silent fail)</p>
+          <p><strong>P0</strong> — auto-close on background (close tx not firing)</p>
+          <p><strong>P1</strong> — expo-secure-store migration</p>
+          <p><strong>P2</strong> — Firebase → Helius webhooks</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ── Priority Fixes ── -->
-  <div>
-    <div class="section-label">Priority Fixes (before mainnet)</div>
-    <div class="priority-item">
-      <div class="prio-num prio-1">P0</div>
-      <div>Session refresh UX — when 4h window expires, app fails silently. Add refresh button.</div>
-    </div>
-    <div class="priority-item">
-      <div class="prio-num prio-1">P0</div>
-      <div>Auto-close on app background — close tx never fires if user minimizes app mid-trade.</div>
-    </div>
-    <div class="priority-item">
-      <div class="prio-num prio-2">P1</div>
-      <div>expo-secure-store — session keypair currently in plaintext AsyncStorage.</div>
-    </div>
-    <div class="priority-item">
-      <div class="prio-num prio-2">P1</div>
-      <div>Per-trade SOL caps in program — currently only max_trades cap, no size limit.</div>
-    </div>
-    <div class="priority-item">
-      <div class="prio-num prio-2">P1</div>
-      <div>Slippage guards on every tx — prevent MEV exploitation.</div>
-    </div>
-    <div class="priority-item">
-      <div class="prio-num prio-3">P2</div>
-      <div>Real backend — Firebase stub → Helius webhooks + DB for profiles/leaderboards.</div>
-    </div>
-
-    <div class="section-label" style="margin-top:1.5rem;">Debug Tree (if something breaks)</div>
+  <div class="section-label" style="margin-top:2rem;">Debug Tree</div>
+  <div class="two-col">
     <div class="card">
-      <div class="card-meta" style="font-size:0.8rem;line-height:1.7;">
-        <strong>Tx failing?</strong><br>
-        → Check session not expired (4h) → check ER validator reachable → check program ID matches DTa8pZ…<br><br>
-        <strong>Price feed stale?</strong><br>
-        → Check Pyth Hermes poll → block opens if feed > 5s old<br><br>
-        <strong>Position stuck?</strong><br>
-        → App closed mid-trade → on next open, close with current slot price → tools/cleanup-state.js
+      <div class="debug-item">
+        <div class="debug-label">Tx failing?</div>
+        <div class="debug-text">Check session not expired (4h) → check ER validator reachable → check program ID matches DTa8pZ…</div>
+      </div>
+      <div class="debug-item">
+        <div class="debug-label">Price feed stale?</div>
+        <div class="debug-text">Check Pyth Hermes poll → block opens if feed > 5s old</div>
+      </div>
+      <div class="debug-item">
+        <div class="debug-label">Position stuck?</div>
+        <div class="debug-text">App closed mid-trade → on next open, close with current slot price → tools/cleanup-state.js</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="debug-item">
+        <div class="debug-label">Session expired?</div>
+        <div class="debug-text">App fails silently — session expires after 4h. Add "refresh session" button on the trade screen.</div>
+      </div>
+      <div class="debug-item">
+        <div class="debug-label">App backgrounded mid-trade?</div>
+        <div class="debug-text">Close tx never fires. Implement foreground service or lazy-close on reopen.</div>
+      </div>
+      <div class="debug-item">
+        <div class="debug-label">Swap tx failing?</div>
+        <div class="debug-text">Check Pyth price feed freshness. If feed &gt; 5s old, block opening until feed refreshes.</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── Footer ── -->
-<div class="footer">
-  <span>Swype ops dashboard — ~/swype-ops/dashboard.html</span>
-  <span>last updated: 2026-05-19 &nbsp;|&nbsp; co-founder: Neko</span>
+<!-- ═══════════════════════════════════════
+     TAB: Research
+═══════════════════════════════════════ -->
+<div class="page" id="page-research">
+
+  <div class="two-col">
+    <div>
+      <div class="section-label">Competitive Position</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Blue ocean — no direct competitor</div>
+          <div class="card-tag tag-green">confirmed</div>
+        </div>
+        <div class="card-meta">
+          <p>No swipe-to-trade leveraged perp app exists on Solana Mobile.</p>
+          <p><strong>Key differentiators:</strong></p>
+          <p>· Swipe UX (novel, shareable, screenshotable)</p>
+          <p>· Time-gated auto-close (unique narrative)</p>
+          <p>· Session key zero-popup (technical moat)</p>
+          <p><br><strong>Key vulnerability:</strong> paper trading = demo, not product. Jupiter integration is the real unlock.</p>
+        </div>
+      </div>
+
+      <div class="section-label">Target User</div>
+      <div class="card">
+        <div class="card-meta">
+          <p>18–35, crypto-curious, not deep into DeFi.</p>
+          <p>Uses phone in quick bursts: subway, bathroom, coffee line.</p>
+          <p>Wants the <em>feeling</em> of trading without the overhead.</p>
+          <p><br><strong>Launch angle:</strong> lead with the moment, not the finance.</p>
+          <p>"Done before your stop" — not "leverage perpetual swap".</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Seeker Launch Leverage</div>
+      <div class="card">
+        <div class="card-meta">
+          <p><strong>1.</strong> Post in Solana Mobile Discord (#seeker) — dev community, right audience</p>
+          <p><strong>2.</strong> Tag @SolanaMobile — if they engage, reach multiplies</p>
+          <p><strong>3.</strong> "First trading game on Seeker" — category founder angle</p>
+          <p><strong>4.</strong> Solana has a blog/press channel — could feature new apps</p>
+          <p><br><strong>Seeker dev portal:</strong> solana.com/developers/mobile</p>
+        </div>
+      </div>
+
+      <div class="section-label">Incubator Targets</div>
+      <div class="card">
+        <div class="card-meta">
+          <p>· <strong>Colosseum</strong> — submitted ✅</p>
+          <p>· <strong>Radiocauses</strong> — in review</p>
+          <p>· <strong>Outlier</strong> — in review</p>
+          <p>· <strong>Madhouse</strong> — outreach pending</p>
+        </div>
+      </div>
+
+      <div class="section-label">Research Docs</div>
+      <div class="card">
+        <div class="card-meta">
+          <p>📄 competitor-landscape.md</p>
+          <p>📄 seeker-ecosystem.md</p>
+          <p>📄 media-list.md</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- ═══════════════════════════════════════
+     TAB: Notes
+═══════════════════════════════════════ -->
+<div class="page" id="page-notes">
+  <div class="two-col">
+    <div>
+      <div class="section-label">Swype Notes</div>
+      <div class="note-box">
+        <textarea id="notes-swype" placeholder="Your notes on Swype progress, blockers, ideas..."></textarea>
+        <div class="note-footer">
+          <button class="note-btn" onclick="saveNote('swype')">Save</button>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:1.5rem;">One Arena Notes</div>
+      <div class="note-box">
+        <textarea id="notes-arena" placeholder="Colosseum, incubators, mainnet beta prep..."></textarea>
+        <div class="note-footer">
+          <button class="note-btn" onclick="saveNote('arena')">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Personal Notes</div>
+      <div class="note-box">
+        <textarea id="notes-personal" placeholder="Random thoughts, reminders, links..."></textarea>
+        <div class="note-footer">
+          <button class="note-btn" onclick="saveNote('personal')">Save</button>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:1.5rem;">Quick Links</div>
+      <div class="card">
+        <div class="card-meta">
+          <p>🔗 <a href="https://github.com/milathebot/swype-ops" target="_blank">swype-ops repo</a></p>
+          <p>🔗 <a href="https://milathebot.github.io/swype-ops/dashboard.html" target="_blank">Live dashboard</a></p>
+          <p>🔗 <a href="https://solana.com/developers/mobile" target="_blank">Seeker dev portal</a></p>
+          <p>🔗 <a href="https://discord.gg/solana-mobile" target="_blank">Solana Mobile Discord</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Tab navigation ──
+  const tabs = document.querySelectorAll('.tab');
+  const pages = document.querySelectorAll('.page');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      pages.forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Checklist ──
+  const CHECK_KEY = 'swype-checklist-v1';
+  const DEFAULT_CHECKED = ['d1','d2','d3','o1','o2','o3','o4','o5'];
+
+  function getChecked() {
+    try { return JSON.parse(localStorage.getItem(CHECK_KEY)) || DEFAULT_CHECKED; }
+    catch { return DEFAULT_CHECKED; }
+  }
+
+  function saveChecked(ids) {
+    localStorage.setItem(CHECK_KEY, JSON.stringify(ids));
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const checked = getChecked();
+    const total = document.querySelectorAll('.check-item').length;
+    const done = checked.length;
+    const pct = Math.round((done / total) * 100);
+
+    ['mainProgress','launchProgress'].forEach(id => {
+      document.getElementById(id).style.width = pct + '%';
+    });
+    document.getElementById('mainProgressText').textContent = done + ' / ' + total + ' tasks';
+    document.getElementById('launchProgressText').textContent = done + ' / ' + total + ' tasks';
+    document.getElementById('checkProgress').textContent = done + '/' + total;
+  }
+
+  document.querySelectorAll('.check-item').forEach(item => {
+    const id = item.dataset.id;
+    const checked = getChecked();
+    if (checked.includes(id)) {
+      item.classList.add('done');
+      item.querySelector('.check-box').classList.add('done');
+    }
+
+    item.addEventListener('click', () => {
+      const checked = getChecked();
+      if (checked.includes(id)) {
+        item.classList.remove('done');
+        item.querySelector('.check-box').classList.remove('done');
+        saveChecked(checked.filter(x => x !== id));
+      } else {
+        item.classList.add('done');
+        item.querySelector('.check-box').classList.add('done');
+        saveChecked([...checked, id]);
+      }
+    });
+  });
+
+  updateProgress();
+
+  // ── Notes (localStorage) ──
+  function saveNote(key) {
+    const val = document.getElementById('notes-' + key).value;
+    localStorage.setItem('swype-note-' + key, val);
+  }
+
+  ['swype','arena','personal'].forEach(key => {
+    const saved = localStorage.getItem('swype-note-' + key);
+    if (saved) document.getElementById('notes-' + key).value = saved;
+  });
+
+  // ── Auto-save notes on blur ──
+  ['swype','arena','personal'].forEach(key => {
+    document.getElementById('notes-' + key).addEventListener('blur', () => saveNote(key));
+  });
+</script>
 </body>
 </html>
